@@ -6,13 +6,18 @@ async function updateUserMenu() {
             const menu = document.querySelector('.nav-menu');
             if (!menu) return;
 
+            // Показываем ссылку на профиль
+            const profileLink = menu.querySelector('#profile-link');
+            if (profileLink) profileLink.style.display = 'inline-block';
+
+            // Удаляем старые ссылки входа/регистрации
             const loginLink = menu.querySelector('a[href="/login"]');
             const registerLink = menu.querySelector('a[href="/register"]');
             if (loginLink) loginLink.remove();
             if (registerLink) registerLink.remove();
 
             const userNameSpan = document.createElement('span');
-            userNameSpan.style.color = '#1100ff';
+            userNameSpan.style.color = '#c084fc';
             userNameSpan.style.marginRight = '1rem';
             userNameSpan.textContent = user.fullName;
             menu.appendChild(userNameSpan);
@@ -42,6 +47,10 @@ async function updateUserMenu() {
                 window.location.href = '/';
             });
             menu.appendChild(logoutBtn);
+        } else {
+            // Если не авторизован — скрываем ссылку на профиль
+            const profileLink = document.querySelector('#profile-link');
+            if (profileLink) profileLink.style.display = 'none';
         }
     } catch (err) {
         console.error('Ошибка обновления меню:', err);
