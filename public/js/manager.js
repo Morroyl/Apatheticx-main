@@ -1,0 +1,140 @@
+// public/js/manager.js
+let currentUserId = null;
+let currentRequestId = null;
+const socket = io();
+
+socket.on('joined-room', (data) => {
+    console.log('✅ Подтверждено присоединение к комнате заявки', data.leaseRequestId);
+});
+
+async function loadUser() {
+    const res = await fetch('/auth/me');
+    if (!res.ok) window.location.href = '/login';
+    const user = await res.json();
+    currentUserId = user.id;
+    return user;
+}
+
+async function loadRequests() {
+    const container = document.getElementById('requests-list');
+    container.innerHTML = '<p>Загрузка...</p>';
+    try {
+        const res = await fetch('/manager/leaserequests');
+        const requests = await res.json();
+        if (requests.length === 0) {
+            container.innerHTML = '<p>Нет активных заявок.</p>';
+            return;
+        }
+        let html = '<table class="appointments-table"><thead><tr><th>ID</th><th>Клиент</th><th>Телефон</th><th>Склад</th><th>Даты</th><th>Статус</th><th>Менеджер</th><th>Действия</th><th>Чат</th></tr></thead><tbody>';
+        requests.forEach(r => {
+            const dates = `${new Date(r.startDate).toLocaleDateString()} – ${new Date(r.endDate).toLocaleDateString()}`;
+            html += `<tr>
+                <td>${r.id}</td>
+                <td>${r.clientName}</td>
+                <td>${r.phone}</td>
+                <td>${r.warehouseName}</td>
+                <td>${dates}</td>
+                <td>${r.status}</td>
+                <td>${r.managerName || '—'}</td>
+                <td style="white-space: nowrap;">
+                    <button class="btn status-btn" data-id="${r.id}" data-status="confirmed" style="margin-right:5px;">Подтвердить</button>
+                    <button class="btn status-btn" data-id="${r.id}" data-status="cancelled" style="margin-right:5px;">Отменить</button>
+                    <button class="btn status-btn" data-id="${r.id}" data-status="completed">Завершить</button>
+                </td>
+                <td><button class="btn chat-btn" data-request-id="${r.id}" ${r.status === 'completed' || r.status === 'cancelled' ? 'disabled' : ''}>Чат</button></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.addEventListener('click', () => updateStatus(btn.dataset.id, btn.dataset.status));
+        });
+        document.querySelectorAll('.chat-btn').forEach(btn => {
+            btn.addEventListener('click', () => openChat(btn.dataset.requestId));
+        });
+    } catch (err) {
+        container.innerHTML = '<p>Ошибка загрузки.</p>';
+        console.error(err);
+    }
+}
+
+async function updateStatus(id, status) {
+    const res = await fetch(`/manager/leaserequests/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+    });
+    if (res.ok) {
+        loadRequests();
+    } else {
+        alert('Ошибка обновления статуса');
+    }
+}
+
+function openChat(requestId) {
+    currentRequestId = requestId;
+    document.getElementById('chat-container').style.display = 'block';
+    document.getElementById('chat-request-id').textContent = requestId;
+    document.getElementById('chat-messages').innerHTML = '';
+    socket.emit('join-appointment', requestId);
+    loadMessages(requestId);
+}
+
+async function loadMessages(requestId) {
+    try {
+        const res = await fetch(`/manager/leaserequests/${requestId}/messages`);
+        if (!res.ok) throw new Error('Ошибка загрузки сообщений');
+        const messages = await res.json();
+        messages.forEach(msg => displayMessage(msg));
+        scrollChatToBottom();
+    } catch (err) {
+        console.error('Ошибка загрузки сообщений:', err);
+    }
+}
+
+function displayMessage(msg) {
+    const chatDiv = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    if (msg.senderId === currentUserId) {
+        messageDiv.classList.add('own');
+    } else {
+        messageDiv.classList.add('other');
+    }
+    const time = new Date(msg.sentAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    messageDiv.innerHTML = `<strong>${msg.senderName}</strong><br>${msg.message}<br><small>${time}</small>`;
+    chatDiv.appendChild(messageDiv);
+}
+
+function scrollChatToBottom() {
+    const chatDiv = document.getElementById('chat-messages');
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+document.getElementById('send-message-btn').addEventListener('click', () => {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message || !currentRequestId) return;
+    socket.emit('send-message', {
+        appointmentId: currentRequestId,
+        senderId: currentUserId,
+        message: message
+    });
+    input.value = '';
+});
+
+socket.on('new-message', (data) => {
+    displayMessage(data);
+    scrollChatToBottom();
+});
+
+document.getElementById('close-chat-btn').addEventListener('click', () => {
+    document.getElementById('chat-container').style.display = 'none';
+    currentRequestId = null;
+});
+
+(async () => {
+    await loadUser();
+    await loadRequests();
+})();

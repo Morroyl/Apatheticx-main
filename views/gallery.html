@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея складов | СкладСервис</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 0;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Галерея складов</h1>
+            <p style="color: var(--text-secondary);">Посмотрите, как выглядят наши помещения</p>
+        </div>
+
+        <div id="gallery-container" class="gallery-grid">
+            <p>Загрузка...</p>
+        </div>
+
+        <!-- Лайтбокс для увеличения фото -->
+        <div id="lightbox" class="lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
+            <span style="position: absolute; top: 20px; right: 30px; color: white; font-size: 2.5rem; cursor: pointer;">&times;</span>
+            <img id="lightbox-img" src="" alt="" style="max-width: 90%; max-height: 80%; border-radius: 8px;">
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 СкладСервис. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        async function loadGallery() {
+            const container = document.getElementById('gallery-container');
+            try {
+                const res = await fetch('/api/warehouses');
+                const warehouses = await res.json();
+                const withImages = warehouses.filter(w => w.imageUrl);
+                if (withImages.length === 0) {
+                    container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">В галерее пока нет изображений.</p>';
+                    return;
+                }
+                let html = '';
+                withImages.forEach(w => {
+                    html += `
+                        <div class="gallery-card">
+                            <img src="${w.imageUrl}" alt="${w.name}" loading="lazy">
+                            <div class="gallery-card-content">
+                                <h3>${w.name}</h3>
+                                <div class="address">
+                                    <img src="/icons/map-marker-alt.svg" alt="">
+                                    ${w.address}
+                                </div>
+                                <a href="/dashboard?warehouseId=${w.id}" class="btn btn-outline">Оставить заявку</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+
+                // Добавляем обработчик для открытия лайтбокса
+                document.querySelectorAll('.gallery-card img').forEach(img => {
+                    img.addEventListener('click', function() {
+                        document.getElementById('lightbox-img').src = this.src;
+                        document.getElementById('lightbox').style.display = 'flex';
+                    });
+                });
+            } catch (err) {
+                container.innerHTML = '<p style="color: #fca5a5;">Ошибка загрузки галереи.</p>';
+                console.error(err);
+            }
+        }
+
+        // Закрытие лайтбокса
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this || e.target.tagName === 'SPAN') {
+                this.style.display = 'none';
+            }
+        });
+
+        loadGallery();
+    </script>
+</body>
+</html>

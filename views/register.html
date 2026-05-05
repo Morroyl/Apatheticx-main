@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | СкладСервис</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .register-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 200px);
+        }
+        .register-card {
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container register-wrapper">
+        <div class="card register-card">
+            <h2>Регистрация</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="fullName">ФИО</label>
+                    <input type="text" id="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                    <div id="email-error" class="error" style="font-size:0.85rem; margin-top:0.25rem;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Телефон</label>
+                    <div class="phone-input">
+                        <span class="phone-prefix">+7</span>
+                        <input type="tel" id="phone" placeholder="(900) 123-45-67" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <div class="password-container">
+                        <input type="password" id="password" required>
+                        <img src="/icons/eye.svg" class="toggle-password" data-target="password" alt="Показать пароль">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Подтверждение пароля</label>
+                    <div class="password-container">
+                        <input type="password" id="confirm-password" required>
+                        <img src="/icons/eye.svg" class="toggle-password" data-target="confirm-password" alt="Показать пароль">
+                    </div>
+                    <div id="password-error" class="error" style="font-size:0.85rem; margin-top:0.25rem;"></div>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Зарегистрироваться</button>
+                <div id="message" class="error" style="margin-top: 1rem;"></div>
+            </form>
+            <p style="margin-top: 1.5rem; text-align: center;">
+                Уже есть аккаунт? <a href="/login" style="color: var(--accent-primary);">Войти</a>
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 СкладСервис. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('input', function(e) {
+            let x = e.target.value.replace(/\D/g, '').substring(0, 10);
+            let formatted = '';
+            if (x.length > 0) formatted += '(' + x.substring(0,3);
+            if (x.length >= 4) formatted += ') ' + x.substring(3,6);
+            if (x.length >= 7) formatted += '-' + x.substring(6,8);
+            if (x.length >= 9) formatted += '-' + x.substring(8,10);
+            e.target.value = formatted;
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const input = document.getElementById(targetId);
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.src = type === 'password' ? '/icons/eye.svg' : '/icons/eye-slash.svg';
+            });
+        });
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value;
+            const errorDiv = document.getElementById('email-error');
+            if (email && !isValidEmail(email)) {
+                errorDiv.textContent = 'Некорректный формат email';
+            } else {
+                errorDiv.textContent = '';
+            }
+        });
+
+        document.getElementById('confirm-password').addEventListener('input', checkPasswords);
+        document.getElementById('password').addEventListener('input', checkPasswords);
+
+        function checkPasswords() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm-password').value;
+            const errorDiv = document.getElementById('password-error');
+            if (password && confirm && password !== confirm) {
+                errorDiv.textContent = 'Пароли не совпадают';
+            } else {
+                errorDiv.textContent = '';
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phoneRaw = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm-password').value;
+
+            if (!isValidEmail(email)) {
+                document.getElementById('email-error').textContent = 'Введите корректный email';
+                return;
+            }
+            if (password !== confirm) {
+                document.getElementById('password-error').textContent = 'Пароли не совпадают';
+                return;
+            }
+            if (password.length < 6) {
+                alert('Пароль должен быть не менее 6 символов');
+                return;
+            }
+
+            const digits = phoneRaw.replace(/\D/g, '');
+            const fullPhone = '+7' + digits;
+
+            const res = await fetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName, email, phone: fullPhone, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('message').innerHTML = '<span class="success">Регистрация успешна! <a href="/login" style="color: var(--accent-primary);">Войти</a></span>';
+            } else {
+                document.getElementById('message').textContent = data.error;
+            }
+        });
+    </script>
+    <script src="/js/theme.js"></script>
+</body>
+</html>

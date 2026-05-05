@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Склады в аренду | СкладСервис</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 0;">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">Склады в аренду</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Подберите помещение под ваш бизнес</p>
+
+        <div class="filter-bar">
+            <input type="text" id="search-input" placeholder="Поиск по названию или адресу...">
+            <select id="category-filter">
+                <option value="all">Все категории</option>
+            </select>
+            <select id="area-filter">
+                <option value="all">Любая площадь</option>
+                <option value="0-200">до 200 м²</option>
+                <option value="200-500">200-500 м²</option>
+                <option value="500-1000">500-1000 м²</option>
+                <option value="1000+">более 1000 м²</option>
+            </select>
+        </div>
+
+        <div id="warehouses-container" class="warehouses-grid">
+            <p>Загрузка...</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 СкладСервис. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        let allWarehouses = [];
+
+        function renderWarehouses(warehouses) {
+            const container = document.getElementById('warehouses-container');
+            if (!warehouses.length) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Нет складов, соответствующих критериям.</p>';
+                return;
+            }
+            let html = '';
+            warehouses.forEach(w => {
+                html += `
+                    <div class="warehouse-card">
+                        <div class="category">${w.category || 'Общий'}</div>
+                        <h3>${w.name}</h3>
+                        <div class="address">
+                            <img src="/icons/map-marker-alt.svg" alt="">
+                            ${w.address}
+                        </div>
+                        <div class="description">${w.description || ''}</div>
+                        <div class="price">${w.pricePerMonth} <small>₽/м² в месяц</small></div>
+                        <div class="area">Площадь: ${w.area} м²</div>
+                        <a href="/dashboard?warehouseId=${w.id}" class="btn-details">Оставить заявку</a>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterWarehouses() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const category = document.getElementById('category-filter').value;
+            const areaRange = document.getElementById('area-filter').value;
+
+            const filtered = allWarehouses.filter(w => {
+                const matchesSearch = w.name.toLowerCase().includes(searchTerm) || w.address.toLowerCase().includes(searchTerm);
+                const matchesCategory = category === 'all' || w.category === category;
+                let matchesArea = true;
+                if (areaRange !== 'all') {
+                    if (areaRange === '0-200') matchesArea = w.area <= 200;
+                    else if (areaRange === '200-500') matchesArea = w.area > 200 && w.area <= 500;
+                    else if (areaRange === '500-1000') matchesArea = w.area > 500 && w.area <= 1000;
+                    else if (areaRange === '1000+') matchesArea = w.area > 1000;
+                }
+                return matchesSearch && matchesCategory && matchesArea;
+            });
+            renderWarehouses(filtered);
+        }
+
+        function populateCategories(warehouses) {
+            const categories = [...new Set(warehouses.map(w => w.category).filter(Boolean))];
+            const select = document.getElementById('category-filter');
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+        }
+
+        fetch('/api/warehouses')
+            .then(res => res.json())
+            .then(warehouses => {
+                allWarehouses = warehouses;
+                renderWarehouses(warehouses);
+                populateCategories(warehouses);
+            })
+            .catch(err => {
+                document.getElementById('warehouses-container').innerHTML = '<p style="color: #fca5a5;">Ошибка загрузки данных.</p>';
+                console.error(err);
+            });
+
+        document.getElementById('search-input').addEventListener('input', filterWarehouses);
+        document.getElementById('category-filter').addEventListener('change', filterWarehouses);
+        document.getElementById('area-filter').addEventListener('change', filterWarehouses);
+    </script>
+</body>
+</html>

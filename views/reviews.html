@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы | СкладСервис</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 3rem 0;">
+        <div class="reviews-header">
+            <h1 style="font-size: 3rem; background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">Отзывы</h1>
+            <div class="rating-summary" id="rating-summary">
+                <span class="average">0.0</span> / 5 · <span id="total-reviews">0</span> отзывов
+            </div>
+        </div>
+
+        <div id="reviews-container" class="reviews-grid">
+            <p style="grid-column: 1/-1; text-align: center;">Загрузка отзывов...</p>
+        </div>
+
+        <div id="review-action-container"></div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 СкладСервис. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        function initStarRating() {
+                    document.querySelectorAll('.star').forEach(star => {
+                        star.addEventListener('mouseenter', function() {
+                            const rating = parseInt(this.dataset.rating);
+                            highlightStars(rating);
+                        });
+                        star.addEventListener('mouseleave', function() {
+                            highlightStars(currentRating);
+                        });
+                        star.addEventListener('click', function() {
+                            currentRating = parseInt(this.dataset.rating);
+                            document.getElementById('rating').value = currentRating;
+                            highlightStars(currentRating);
+                        });
+                    });
+                }
+
+                function highlightStars(rating) {
+                    document.querySelectorAll('.star').forEach(star => {
+                        const starRating = parseInt(star.dataset.rating);
+                        if (starRating <= rating) {
+                            star.classList.add('selected');
+                        } else {
+                            star.classList.remove('selected');
+                        }
+                    });
+                }
+
+                async function loadReviews() {
+                    try {
+                        const res = await fetch('/api/reviews');
+                        const reviews = await res.json();
+                        allReviews = reviews;
+                        renderReviews(reviews);
+                        updateRatingSummary(reviews);
+                        updateActionContent();
+                    } catch (err) {
+                        document.getElementById('reviews-container').innerHTML = '<p style="color: #fca5a5;">Ошибка загрузки отзывов.</p>';
+                    }
+                }
+
+                function renderReviews(reviews) {
+                    const container = document.getElementById('reviews-container');
+                    if (reviews.length === 0) {
+                        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Пока нет отзывов. Будьте первым!</p>';
+                        return;
+                    }
+                    let html = '';
+                    reviews.forEach(r => {
+                        const fullName = r.fullName || 'Аноним';
+                        const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                        const date = new Date(r.createdAt).toLocaleDateString('ru-RU');
+
+                        html += `
+                            <div class="review-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 28px; padding: 2rem; transition: all 0.3s;">
+                                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: white; text-transform: uppercase;">${initials}</div>
+                                    <div>
+                                        <h4 style="font-size:1.2rem;">${fullName}</h4>
+                                        <div style="font-size:0.9rem; color: var(--accent-primary);">${date}</div>
+                                    </div>
+                                </div>
+                                <div style="color:#fbbf24; margin-bottom:1rem; font-size:1.2rem;">${stars}</div>
+                                <div style="color: var(--text-secondary); font-style: italic;">${r.comment || ''}</div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+
+                function updateRatingSummary(reviews) {
+                    const total = reviews.length;
+                    document.getElementById('total-reviews').textContent = total;
+                    if (total === 0) {
+                        document.querySelector('.average').textContent = '0.0';
+                        return;
+                    }
+                    const avg = (reviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1);
+                    document.querySelector('.average').textContent = avg;
+                }
+
+                function hasUserReviewed() {
+                    if (!currentUser) return false;
+                    return allReviews.some(r => r.userId === currentUser.id);
+                }
+
+                function updateActionContent() {
+                    const container = document.getElementById('review-action-container');
+                    if (!currentUser) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem;">
+                                <p>Чтобы оставить отзыв <a href="/login?returnTo=/reviews" class="btn btn-outline">Войдите</a> или <a href="/register?returnTo=/reviews" class="btn btn-outline">Зарегистрируйтесь</a></p>
+                            </div>
+                        `;
+                    } else if (currentUser.role !== 'client') {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem;">
+                                <p>Вы авторизованы как сотрудник. Оставлять отзывы могут только клиенты.</p>
+                            </div>
+                        `;
+                    } else if (hasUserReviewed()) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 32px; color: var(--text-secondary);">
+                                <p>Вы уже оставили отзыв. Спасибо!</p>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div style="margin-top:2rem; padding:2rem; background: var(--bg-card); border:1px solid var(--border-color); border-radius:32px;">
+                                <h3>Оставить отзыв</h3>
+                                <form id="review-form">
+                                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                                        <span class="star" data-rating="1" style="font-size:2rem; color:#d1c4e9; cursor:pointer; transition:color 0.2s;">★</span>
+                                        <span class="star" data-rating="2" style="font-size:2rem; color:#d1c4e9; cursor:pointer;">★</span>
+                                        <span class="star" data-rating="3" style="font-size:2rem; color:#d1c4e9; cursor:pointer;">★</span>
+                                        <span class="star" data-rating="4" style="font-size:2rem; color:#d1c4e9; cursor:pointer;">★</span>
+                                        <span class="star" data-rating="5" style="font-size:2rem; color:#d1c4e9; cursor:pointer;">★</span>
+                                    </div>
+                                    <input type="hidden" id="rating" name="rating" value="0">
+                                    <div class="form-group">
+                                        <label for="comment">Ваш отзыв</label>
+                                        <textarea id="comment" placeholder="Поделитесь своими впечатлениями..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn">Отправить отзыв</button>
+                                    <div id="review-message" class="error" style="margin-top:1rem;"></div>
+                                </form>
+                            </div>
+                        `;
+                        initStarRating();
+                        document.getElementById('review-form').addEventListener('submit', handleReviewSubmit);
+                    }
+                }
+
+                async function handleReviewSubmit(e) {
+                    e.preventDefault();
+                    const rating = document.getElementById('rating').value;
+                    const comment = document.getElementById('comment').value;
+                    if (rating === '0') {
+                        document.getElementById('review-message').textContent = 'Пожалуйста, выберите оценку';
+                        return;
+                    }
+                    if (!comment.trim()) {
+                        document.getElementById('review-message').textContent = 'Пожалуйста, напишите отзыв';
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/reviews', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ rating: parseInt(rating), comment })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            await loadReviews();
+                        } else {
+                            document.getElementById('review-message').textContent = data.error || 'Ошибка при добавлении отзыва';
+                            if (res.status === 403) {
+                                await loadReviews();
+                            }
+                        }
+                    } catch (err) {
+                        document.getElementById('review-message').textContent = 'Ошибка сети';
+                    }
+                }
+
+                async function checkAuth() {
+                    try {
+                        const res = await fetch('/auth/me');
+                        if (res.ok) {
+                            const user = await res.json();
+                            currentUser = user;
+                        } else {
+                            currentUser = null;
+                        }
+                    } catch (err) {
+                        console.error('Ошибка проверки авторизации:', err);
+                        currentUser = null;
+                    }
+                }
+
+                (async () => {
+                    await checkAuth();
+                    await loadReviews();
+                })();
+    </script>
+</body>
+</html>

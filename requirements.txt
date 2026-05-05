@@ -1,0 +1,7 @@
+express
+mssql
+msnodesqlv8
+bcrypt
+express-session
+socket.io
+dotenv

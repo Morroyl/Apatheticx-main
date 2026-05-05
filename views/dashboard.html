@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | СкладСервис</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 0;">
+        <h2 style="margin-bottom: 1rem;">Личный кабинет арендатора</h2>
+        <p style="margin-bottom: 2rem;">Добро пожаловать, <span id="user-name" style="color: var(--accent-primary); font-weight: 600;"></span>!</p>
+
+        <div class="card">
+            <h3>Новая заявка на аренду</h3>
+            <form id="lease-request-form">
+                <div class="form-group">
+                    <label for="warehouse">Выберите склад</label>
+                    <select id="warehouse" required>
+                        <option value="">— Выберите склад —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">Дата начала аренды</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">Дата окончания аренды</label>
+                    <input type="date" id="endDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий (необязательно)</label>
+                    <textarea id="comment" rows="3" placeholder="Дополнительные пожелания..."></textarea>
+                </div>
+                <button type="submit" class="btn">Отправить заявку</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Мои заявки</h3>
+            <div id="requests-list">
+                <p style="color: var(--text-secondary);">Загрузка...</p>
+            </div>
+        </div>
+
+        <div id="chat-container" class="card" style="display: none;">
+            <h3>Чат по заявке #<span id="chat-request-id"></span></h3>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chat-input" placeholder="Введите сообщение..." style="flex: 1;">
+                <button id="send-message-btn" class="btn">Отправить</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        let currentUserId = null;
+        let currentRequestId = null;
+        const socket = io();
+
+        socket.on('joined-room', (data) => {
+            console.log('✅ Подтверждено присоединение к комнате заявки', data.leaseRequestId);
+        });
+
+        async function loadUser() {
+            try {
+                const res = await fetch('/auth/me');
+                if (!res.ok) throw new Error('Не авторизован');
+                const user = await res.json();
+                currentUserId = user.id;
+                document.getElementById('user-name').textContent = user.fullName;
+                return user;
+            } catch (err) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function loadWarehouses() {
+            const res = await fetch('/lease-requests/warehouses');
+            const warehouses = await res.json();
+            const select = document.getElementById('warehouse');
+            warehouses.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = `${w.name} (${w.address}) – ${w.pricePerMonth} ₽/м²`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadRequests() {
+            const container = document.getElementById('requests-list');
+            container.innerHTML = '<p>Загрузка...</p>';
+            try {
+                const res = await fetch('/lease-requests/my');
+                const requests = await res.json();
+                if (requests.length === 0) {
+                    container.innerHTML = '<p>У вас пока нет заявок.</p>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>Склад</th><th>Даты</th><th>Статус</th><th>Менеджер</th><th>Чат</th></tr></thead><tbody>';
+                requests.forEach(r => {
+                    const statusMap = {
+                        'pending': 'На рассмотрении',
+                        'confirmed': 'Подтверждена',
+                        'cancelled': 'Отменена',
+                        'completed': 'Завершена'
+                    };
+                    const dates = `${new Date(r.startDate).toLocaleDateString()} – ${new Date(r.endDate).toLocaleDateString()}`;
+                    html += `<tr>
+                        <td>${r.warehouseName}</td>
+                        <td>${dates}</td>
+                        <td>${statusMap[r.status] || r.status}</td>
+                        <td>${r.managerName || 'Не назначен'}</td>
+                        <td><button class="btn chat-btn" data-request-id="${r.id}" ${r.status === 'cancelled' || r.status === 'completed' ? 'disabled' : ''}>Чат</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+
+                document.querySelectorAll('.chat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openChat(btn.dataset.requestId));
+                });
+            } catch (err) {
+                container.innerHTML = '<p>Ошибка загрузки заявок.</p>';
+            }
+        }
+
+        function openChat(requestId) {
+            currentRequestId = requestId;
+            document.getElementById('chat-container').style.display = 'block';
+            document.getElementById('chat-request-id').textContent = requestId;
+            document.getElementById('chat-messages').innerHTML = '';
+            socket.emit('join-appointment', requestId);
+            loadMessages(requestId);
+        }
+
+        async function loadMessages(requestId) {
+            try {
+                const res = await fetch(`/lease-requests/${requestId}/messages`);
+                if (!res.ok) throw new Error('Ошибка загрузки сообщений');
+                const messages = await res.json();
+                messages.forEach(msg => displayMessage(msg));
+                scrollChatToBottom();
+            } catch (err) {
+                console.error('Ошибка загрузки сообщений:', err);
+            }
+        }
+
+        function displayMessage(msg) {
+            const chatDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (msg.senderId === currentUserId) {
+                messageDiv.classList.add('own');
+            } else {
+                messageDiv.classList.add('other');
+            }
+            const time = new Date(msg.sentAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            messageDiv.innerHTML = `<strong>${msg.senderName || 'Вы'}</strong><br>${msg.message}<br><small>${time}</small>`;
+            chatDiv.appendChild(messageDiv);
+        }
+
+        function scrollChatToBottom() {
+            const chatDiv = document.getElementById('chat-messages');
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        document.getElementById('send-message-btn').addEventListener('click', () => {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message || !currentRequestId) return;
+            socket.emit('send-message', {
+                appointmentId: currentRequestId,
+                senderId: currentUserId,
+                message: message
+            });
+            input.value = '';
+        });
+
+        socket.on('new-message', (data) => {
+            displayMessage(data);
+            scrollChatToBottom();
+        });
+
+        document.getElementById('lease-request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const warehouseId = document.getElementById('warehouse').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const comment = document.getElementById('comment').value;
+
+            const res = await fetch('/lease-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ warehouseId, startDate, endDate, comment })
+            });
+            if (res.ok) {
+                alert('Заявка отправлена!');
+                document.getElementById('lease-request-form').reset();
+                loadRequests();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Ошибка при отправке заявки');
+            }
+        });
+
+        (async () => {
+            await loadUser();
+            await loadWarehouses();
+            await loadRequests();
+        })();
+    </script>
+</body>
+</html>

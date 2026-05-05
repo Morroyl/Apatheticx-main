@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СкладСервис – аренда складов</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Дополнительные стили для главной -->
+    <style>
+        .hero-section {
+            position: relative;
+            padding: 8rem 0 10rem;
+            background-image: url('/images/warehouse-hero.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            isolation: isolate;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(10,25,47,0.9) 0%, rgba(66,153,225,0.4) 100%);
+            z-index: -1;
+        }
+        .hero-section .container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+            color: white;
+        }
+        .hero-section h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .hero-section p {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .features-section {
+            padding: 5rem 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 32px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 30px -15px rgba(66,153,225,0.5);
+            border-color: var(--accent-primary);
+        }
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .feature-icon img {
+            width: 40px;
+            height: 40px;
+            filter: brightness(0) invert(1);
+        }
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .about-section {
+            padding: 5rem 0;
+            background: var(--bg-secondary);
+        }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .about-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .about-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        .about-image {
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.3);
+        }
+        .about-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        .about-image:hover img {
+            transform: scale(1.05);
+        }
+        .warehouses-section {
+            padding: 5rem 0;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        .testimonials-section {
+            padding: 5rem 0;
+            background: var(--bg-secondary);
+        }
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .testimonial-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 2rem;
+            position: relative;
+        }
+        .testimonial-card::before {
+            content: '“';
+            font-size: 6rem;
+            position: absolute;
+            top: -1rem;
+            left: 1rem;
+            opacity: 0.2;
+            color: var(--accent-primary);
+            font-family: serif;
+        }
+        .testimonial-card p {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .testimonial-author img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .testimonial-author h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+        .testimonial-author span {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .contact-section {
+            padding: 5rem 0;
+        }
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .contact-info {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 32px;
+            padding: 2.5rem;
+        }
+        .contact-info h3 {
+            margin-bottom: 1.5rem;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .contact-item img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1);
+        }
+        body.light-theme .contact-item img {
+            filter: brightness(0) invert(0);
+        }
+        .contact-item span {
+            color: var(--text-secondary);
+        }
+        .map {
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.3);
+            height: 300px;
+        }
+        .map iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        @media (max-width: 768px) {
+            .about-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-section {
+                padding: 5rem 0 7rem;
+            }
+            .hero-section h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">СкладСервис</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero секция -->
+        <section class="hero-section">
+            <div class="container">
+                <h1>Аренда складов<br>с умом и без посредников</h1>
+                <p>Более 50 000 м² качественных складских помещений. Круглосуточный доступ, охрана, гибкие условия.</p>
+                <div class="hero-buttons">
+                    <a href="/warehouses" class="btn">Выбрать склад</a>
+                    <a href="/about" class="btn btn-outline">Узнать больше</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Преимущества -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Почему выбирают нас</h2>
+                    <p>Мы создали идеальные условия для вашего бизнеса</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><img src="/icons/security.svg" alt="Безопасность"></div>
+                        <h3>Безопасность 24/7</h3>
+                        <p>Круглосуточная охрана, видеонаблюдение и контроль доступа на каждом объекте.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><img src="/icons/loading.svg" alt="Логистика"></div>
+                        <h3>Удобная логистика</h3>
+                        <p>Прямые подъезды для фур, погрузочные площадки и маневровая зона.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><img src="/icons/categories1.svg" alt="Температура"></div>
+                        <h3>Разные категории</h3>
+                        <p>Сухие, холодильные, овощехранилища — под любые нужды.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><img src="/icons/contract.svg" alt="Гибкость"></div>
+                        <h3>Гибкие условия</h3>
+                        <p>Аренда от месяца, без штрафов за досрочное расторжение.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- О компании -->
+        <section class="about-section">
+            <div class="container about-grid">
+                <div class="about-content">
+                    <h2>О компании СкладСервис</h2>
+                    <p>Более 10 лет мы помогаем бизнесу находить надёжные складские помещения. Наши объекты соответствуют самым строгим стандартам, а команда профессионалов всегда готова подобрать оптимальный вариант.</p>
+                    <p>Мы ценим каждого клиента и предлагаем индивидуальные условия сотрудничества. Присоединяйтесь к числу довольных партнёров!</p>
+                    <a href="/about" class="btn">Подробнее о нас</a>
+                </div>
+                <div class="about-image">
+                    <img src="/images/warehouse.jpg" alt="Наша команда">
+                </div>
+            </div>
+        </section>
+
+        <!-- Популярные склады (динамически) -->
+        <section class="warehouses-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Популярные склады</h2>
+                    <p>Выберите идеальное помещение для вашего бизнеса</p>
+                </div>
+                <div id="popular-warehouses" class="warehouses-grid">
+                    <p>Загрузка...</p>
+                </div>
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="/warehouses" class="btn">Смотреть все склады →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Отзывы -->
+        <section class="testimonials-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Отзывы наших клиентов</h2>
+                    <p>Что говорят те, кто уже арендует у нас</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <p>“Пользуюсь складами на Ленинградском шоссе уже два года. Всё отлично: охрана, подъезды, отношение персонала.”</p>
+                        <div class="testimonial-author">
+                            <img src="/images/avatar-placeholder.jpg" alt="Алексей">
+                            <div>
+                                <h4>Алексей Иванов</h4>
+                                <span>Владелец логистической компании</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <p>“Отличный холодильный склад. Температура стабильная, никогда не было проблем. Рекомендую!”</p>
+                        <div class="testimonial-author">
+                            <img src="/images/avatar-placeholder.jpg" alt="Елена">
+                            <div>
+                                <h4>Елена Смирнова</h4>
+                                <span>Директор по закупкам</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <p>“Быстро подобрали помещение, помогли с документами. Профессионалы своего дела. Спасибо!”</p>
+                        <div class="testimonial-author">
+                            <img src="/images/avatar-placeholder.jpg" alt="Дмитрий">
+                            <div>
+                                <h4>Дмитрий Петров</h4>
+                                <span>ИП</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="/reviews" class="btn btn-outline">Все отзывы</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Контакты -->
+        <section class="contact-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Свяжитесь с нами</h2>
+                    <p>Ответим на все вопросы и поможем с выбором</p>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h3>Контакты</h3>
+                        <div class="contact-item">
+                            <img src="/icons/map-marker-alt.svg" alt="Адрес">
+                            <span>г. Москва, Измайловский пр., 63А, Москва, 105043</span>
+                        </div>
+                        <div class="contact-item">
+                            <img src="/icons/phone.svg" alt="Телефон">
+                            <span>+7 (999) 999-99-99</span>
+                        </div>
+                        <div class="contact-item">
+                            <img src="/icons/envelope.svg" alt="Email">
+                            <span>rent@skladservice.ru</span>
+                        </div>
+                        <div class="contact-item">
+                            <img src="/icons/clock.svg" alt="Время работы">
+                            <span>Пн-Пт 9:00–18:00</span>
+                        </div>
+                    </div>
+                    <div class="map">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d396.5584218987261!2d37.78729129954727!3d55.78849395471088!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46b534d5ca27849b%3A0xfb0ee1287140a06d!2z0JzRg9C20YHQutCw0Y8g0L7QtNC10LbQtNCwIE1lbi1DbGFzc2ljYQ!5e0!3m2!1sru!2sru!4v1777970311391!5m2!1sru!2sru" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 СкладСервис. Все права защищены.</p>
+            <p style="margin-top: 0.5rem;">г. Москва, ул. Промышленная, д. 5 | +7 (495) 123-45-67</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        // Загрузка популярных складов
+        async function loadPopularWarehouses() {
+            try {
+                const res = await fetch('/api/warehouses');
+                const warehouses = await res.json();
+                const popular = warehouses.slice(0, 3); // первые три
+                const container = document.getElementById('popular-warehouses');
+                if (!container) return;
+                if (popular.length === 0) {
+                    container.innerHTML = '<p>Нет данных</p>';
+                    return;
+                }
+                let html = '';
+                popular.forEach(w => {
+                    html += `
+                        <div class="warehouse-card">
+                            <div class="category">${w.category || 'Общий'}</div>
+                            <h3>${w.name}</h3>
+                            <div class="address">
+                                <img src="/icons/map-marker-alt.svg" alt="">
+                                ${w.address}
+                            </div>
+                            <div class="description">${w.description || ''}</div>
+                            <div class="price">${w.pricePerMonth} <small>₽/м² в месяц</small></div>
+                            <div class="area">Площадь: ${w.area} м²</div>
+                            <a href="/dashboard?warehouseId=${w.id}" class="btn-details">Оставить заявку</a>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Ошибка загрузки популярных складов:', err);
+                document.getElementById('popular-warehouses').innerHTML = '<p>Ошибка загрузки</p>';
+            }
+        }
+        loadPopularWarehouses();
+    </script>
+</body>
+</html>
