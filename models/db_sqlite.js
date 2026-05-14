@@ -1,3 +1,4 @@
+
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -32,6 +33,15 @@ function initDatabase() {
         passwordHash TEXT NOT NULL,
         role TEXT DEFAULT 'client',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS ArchivedMessages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    originalId INTEGER NOT NULL,
+    leaseRequestId INTEGER NOT NULL,
+    senderId INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    sentAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS Warehouses (
@@ -93,14 +103,6 @@ function initDatabase() {
         archivedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS ArchivedMessages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        originalId INTEGER NOT NULL,
-        leaseRequestId INTEGER NOT NULL,
-        senderId INTEGER NOT NULL,
-        message TEXT NOT NULL,
-        sentAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
 
     // Добавляем тестовые склады
     db.get(`SELECT COUNT(*) as count FROM Warehouses`, (err, row) => {
