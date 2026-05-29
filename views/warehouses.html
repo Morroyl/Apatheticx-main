@@ -3,13 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Склады в аренду | СкладСервис</title>
+    <title>Склады в аренду | ЛегатоСклад</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Дополнительные стили для прижатия футера */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        
+        /* Дополнительные стили для сетки карточек (на всякий случай) */
+        .warehouses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .warehouse-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .warehouse-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 25px 30px -12px rgba(66,153,225,0.5);
+        }
+        .warehouse-card .category {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+        .warehouse-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.75rem;
+        }
+        .warehouse-card .address {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .warehouse-card .address img {
+            width: 18px;
+            height: 18px;
+            filter: brightness(0) invert(1);
+        }
+        body.light-theme .warehouse-card .address img {
+            filter: brightness(0) invert(0);
+        }
+        .warehouse-card .description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        .warehouse-card .price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        .warehouse-card .price small {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--accent-primary);
+        }
+        .warehouse-card .area {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        .warehouse-card .btn-details {
+            align-self: flex-start;
+            background: transparent;
+            border: 1px solid var(--accent-primary);
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-top: auto;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+        }
+        .warehouse-card .btn-details:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 60px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        .filter-bar input, .filter-bar select {
+            flex: 1;
+            min-width: 200px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 40px;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-primary);
+        }
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: column;
+            }
+            .warehouses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="container header-inner">
-            <div class="logo">СкладСервис</div>
+            <div class="logo">ЛегатоСклад</div>
             <nav class="nav-menu">
                 <a href="/">Главная</a>
                 <a href="/warehouses">Склады</a>
@@ -50,7 +192,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2025 СкладСервис. Все права защищены.</p>
+            <p>© 2025 ЛегатоСклад. Все права защищены.</p>
         </div>
     </footer>
 

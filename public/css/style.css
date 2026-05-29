@@ -1,5 +1,4 @@
 :root {
-    /* Тёмная тема (тёмно-синяя с голубым) */
     --bg-primary: #0a192f;
     --bg-secondary: #112240;
     --bg-card: rgba(100, 150, 255, 0.05);
@@ -21,7 +20,6 @@
 }
 
 body.light-theme {
-    /* Светлая тема (бело-голубая) */
     --bg-primary: #f7faff;
     --bg-secondary: #ffffff;
     --bg-card: rgba(66, 153, 225, 0.05);
@@ -42,7 +40,6 @@ body.light-theme {
     --chat-other-text: #1a365d;
 }
 
-/* Прижимаем футер к низу */
 html, body {
     height: 100%;
     margin: 0;

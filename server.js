@@ -20,7 +20,6 @@ app.use(session({
     cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// API маршруты
 app.use('/api/warehouses', require('./routes/warehouses'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/auth', require('./routes/auth'));
@@ -28,7 +27,6 @@ app.use('/lease-requests', require('./routes/leaseRequests'));
 app.use('/manager', require('./routes/manager'));
 app.use('/director', require('./routes/director'));
 
-// Статические страницы
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views/index.html')));
 app.get('/warehouses', (req, res) => res.sendFile(path.join(__dirname, 'views/warehouses.html')));
 app.get('/reviews', (req, res) => res.sendFile(path.join(__dirname, 'views/reviews.html')));
@@ -53,7 +51,6 @@ app.get('/director-panel', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/director.html'));
 });
 
-// WebSocket
 io.on('connection', (socket) => {
     console.log('Новое подключение:', socket.id);
 
@@ -66,7 +63,6 @@ io.on('connection', (socket) => {
     socket.on('send-message', async (data) => {
         console.log('Получено сообщение:', data);
         try {
-            // Проверяем существование активной заявки
             const requestCheck = await db.query(
                 `SELECT id FROM LeaseRequests WHERE id = @id AND status NOT IN ('completed', 'cancelled')`,
                 { id: data.appointmentId }

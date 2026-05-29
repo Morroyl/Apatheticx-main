@@ -1,4 +1,3 @@
-
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -23,7 +22,6 @@ function run(sql, params = []) {
     });
 }
 
-// Инициализация таблиц
 function initDatabase() {
     db.run(`CREATE TABLE IF NOT EXISTS Users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
