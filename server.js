@@ -6,6 +6,12 @@ const http = require('http');
 const socketIo = require('socket.io');
 const db = require('./models/db');
 
+// Проверка секрета сессии
+if (!process.env.SESSION_SECRET) {
+    console.error('ОШИБКА: Не задан SESSION_SECRET в .env');
+    process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -27,30 +33,39 @@ app.use('/lease-requests', require('./routes/leaseRequests'));
 app.use('/manager', require('./routes/manager'));
 app.use('/director', require('./routes/director'));
 
+// Статические страницы
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views/index.html')));
 app.get('/warehouses', (req, res) => res.sendFile(path.join(__dirname, 'views/warehouses.html')));
+app.get('/warehouse/:id', (req, res) => res.sendFile(path.join(__dirname, 'views/warehouse-detail.html')));
 app.get('/reviews', (req, res) => res.sendFile(path.join(__dirname, 'views/reviews.html')));
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'views/about.html')));
 app.get('/gallery', (req, res) => res.sendFile(path.join(__dirname, 'views/gallery.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views/login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views/register.html')));
+
+// Личный кабинет клиента
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.sendFile(path.join(__dirname, 'views/dashboard.html'));
 });
+
+// Панель менеджера (доступ: manager, admin)
 app.get('/manager-panel', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'manager') {
+    if (!req.session.user || (req.session.user.role !== 'manager' && req.session.user.role !== 'admin')) {
         return res.status(403).send('Доступ запрещён');
     }
     res.sendFile(path.join(__dirname, 'views/manager.html'));
 });
+
+// Панель директора (доступ: director, admin)
 app.get('/director-panel', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'director') {
+    if (!req.session.user || (req.session.user.role !== 'director' && req.session.user.role !== 'admin')) {
         return res.status(403).send('Доступ запрещён');
     }
     res.sendFile(path.join(__dirname, 'views/director.html'));
 });
 
+// WebSocket для чата
 io.on('connection', (socket) => {
     console.log('Новое подключение:', socket.id);
 
@@ -64,22 +79,22 @@ io.on('connection', (socket) => {
         console.log('Получено сообщение:', data);
         try {
             const requestCheck = await db.query(
-                `SELECT id FROM LeaseRequests WHERE id = @id AND status NOT IN ('completed', 'cancelled')`,
-                { id: data.appointmentId }
+                `SELECT id FROM LeaseRequests WHERE id = ? AND status NOT IN ('completed', 'cancelled')`,
+                [data.appointmentId]
             );
             if (requestCheck.length === 0) {
                 console.log(`Заявка ${data.appointmentId} не найдена или завершена, сообщение отклонено`);
                 return;
             }
 
-            await db.query(
+            await db.run(
                 `INSERT INTO Messages (leaseRequestId, senderId, message, sentAt)
-                 VALUES (@leaseRequestId, @senderId, @message, GETDATE())`,
-                { leaseRequestId: data.appointmentId, senderId: data.senderId, message: data.message }
+                 VALUES (?, ?, ?, datetime('now'))`,
+                [data.appointmentId, data.senderId, data.message]
             );
             console.log('Сообщение сохранено в БД');
 
-            const sender = await db.query('SELECT fullName FROM Users WHERE id = @id', { id: data.senderId });
+            const sender = await db.query('SELECT fullName FROM Users WHERE id = ?', [data.senderId]);
             const senderName = sender[0]?.fullName || 'Пользователь';
 
             const room = io.sockets.adapter.rooms.get(`request-${data.appointmentId}`);

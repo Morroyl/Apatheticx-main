@@ -2,41 +2,41 @@ const { query, run } = require('../models/db');
 
 const Warehouse = {
     async findAll() {
-        return await db.query('SELECT * FROM Warehouses ORDER BY category, name');
+        return await query('SELECT * FROM Warehouses ORDER BY category, name');
     },
 
     async findById(id) {
-        const warehouses = await db.query('SELECT * FROM Warehouses WHERE id = @id', { id });
+        const warehouses = await query('SELECT * FROM Warehouses WHERE id = ?', [id]);
         return warehouses[0];
     },
 
     async create(name, description, address, area, pricePerMonth, category) {
-        const result = await db.query(
+        const result = await run(
             `INSERT INTO Warehouses (name, description, address, area, pricePerMonth, category)
-             OUTPUT INSERTED.id
-             VALUES (@name, @description, @address, @area, @pricePerMonth, @category)`,
-            { name, description, address, area, pricePerMonth, category }
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, description, address, area, pricePerMonth, category]
         );
-        return result[0]?.id;
+        return result.id;
     },
 
     async update(id, fields) {
         const allowedFields = ['name', 'description', 'address', 'area', 'pricePerMonth', 'category'];
         const updates = [];
-        const params = { id };
+        const params = [];
         for (const field of allowedFields) {
             if (fields[field] !== undefined) {
-                updates.push(`${field} = @${field}`);
-                params[field] = fields[field];
+                updates.push(`${field} = ?`);
+                params.push(fields[field]);
             }
         }
         if (updates.length === 0) return;
-        const query = `UPDATE Warehouses SET ${updates.join(', ')} WHERE id = @id`;
-        await db.query(query, params);
+        params.push(id);
+        const sql = `UPDATE Warehouses SET ${updates.join(', ')} WHERE id = ?`;
+        await run(sql, params);
     },
 
     async delete(id) {
-        await db.query('DELETE FROM Warehouses WHERE id = @id', { id });
+        await run('DELETE FROM Warehouses WHERE id = ?', [id]);
     }
 };
 

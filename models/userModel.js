@@ -2,42 +2,42 @@ const { query, run } = require('../models/db');
 
 const User = {
     async create(fullName, email, phone, passwordHash, role = 'client') {
-        const result = await db.query(
+        const result = await run(
             `INSERT INTO Users (fullName, email, phone, passwordHash, role)
-             OUTPUT INSERTED.id
-             VALUES (@fullName, @email, @phone, @passwordHash, @role)`,
-            { fullName, email, phone, passwordHash, role }
+             VALUES (?, ?, ?, ?, ?)`,
+            [fullName, email, phone, passwordHash, role]
         );
-        return result[0]?.id;
+        return result.id;
     },
 
     async findByEmail(email) {
-        const users = await db.query('SELECT * FROM Users WHERE email = @email', { email });
+        const users = await query('SELECT * FROM Users WHERE email = ?', [email]);
         return users[0];
     },
 
     async findById(id) {
-        const users = await db.query('SELECT * FROM Users WHERE id = @id', { id });
+        const users = await query('SELECT * FROM Users WHERE id = ?', [id]);
         return users[0];
     },
 
     async update(id, fields) {
         const allowedFields = ['fullName', 'phone', 'passwordHash'];
         const updates = [];
-        const params = { id };
+        const params = [];
         for (const field of allowedFields) {
             if (fields[field] !== undefined) {
-                updates.push(`${field} = @${field}`);
-                params[field] = fields[field];
+                updates.push(`${field} = ?`);
+                params.push(fields[field]);
             }
         }
         if (updates.length === 0) return;
-        const query = `UPDATE Users SET ${updates.join(', ')} WHERE id = @id`;
-        await db.query(query, params);
+        params.push(id);
+        const sql = `UPDATE Users SET ${updates.join(', ')} WHERE id = ?`;
+        await run(sql, params);
     },
 
     async delete(id) {
-        await db.query('DELETE FROM Users WHERE id = @id', { id });
+        await run('DELETE FROM Users WHERE id = ?', [id]);
     }
 };
 

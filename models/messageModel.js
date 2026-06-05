@@ -2,28 +2,27 @@ const { query, run } = require('../models/db');
 
 const Message = {
     async create(leaseRequestId, senderId, message) {
-        const result = await db.query(
+        const result = await run(
             `INSERT INTO Messages (leaseRequestId, senderId, message, sentAt)
-             OUTPUT INSERTED.id
-             VALUES (@leaseRequestId, @senderId, @message, GETDATE())`,
-            { leaseRequestId, senderId, message }
+             VALUES (?, ?, ?, datetime('now'))`,
+            [leaseRequestId, senderId, message]
         );
-        return result[0]?.id;
+        return result.id;
     },
 
     async findByLeaseRequest(leaseRequestId) {
-        return await db.query(
+        return await query(
             `SELECT m.*, u.fullName as senderName
              FROM Messages m
              JOIN Users u ON m.senderId = u.id
-             WHERE m.leaseRequestId = @leaseRequestId
+             WHERE m.leaseRequestId = ?
              ORDER BY m.sentAt`,
-            { leaseRequestId }
+            [leaseRequestId]
         );
     },
 
     async deleteByLeaseRequest(leaseRequestId) {
-        await db.query('DELETE FROM Messages WHERE leaseRequestId = @leaseRequestId', { leaseRequestId });
+        await run('DELETE FROM Messages WHERE leaseRequestId = ?', [leaseRequestId]);
     }
 };
 

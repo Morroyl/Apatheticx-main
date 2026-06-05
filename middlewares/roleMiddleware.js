@@ -21,18 +21,27 @@ function hasRole(allowedRoles) {
     };
 }
 
+// Обновлённая проверка: директор или администратор
 function isDirector(req, res, next) {
-    if (req.session.user && req.session.user.role === 'director') {
+    if (req.session.user && (req.session.user.role === 'director' || req.session.user.role === 'admin')) {
         return next();
     }
-    res.status(403).json({ error: 'Доступ запрещён. Требуется роль директора.' });
+    res.status(403).json({ error: 'Доступ запрещён. Требуется роль директора или администратора.' });
+}
+
+// Только администратор
+function isAdmin(req, res, next) {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next();
+    }
+    res.status(403).json({ error: 'Доступ запрещён. Требуется роль администратора.' });
 }
 
 function isManagerOrDirector(req, res, next) {
-    if (req.session.user && (req.session.user.role === 'manager' || req.session.user.role === 'director')) {
+    if (req.session.user && (req.session.user.role === 'manager' || req.session.user.role === 'director' || req.session.user.role === 'admin')) {
         return next();
     }
-    res.status(403).json({ error: 'Доступ запрещён. Требуется роль менеджера или директора.' });
+    res.status(403).json({ error: 'Доступ запрещён. Требуется роль менеджера, директора или администратора.' });
 }
 
-module.exports = { isManager, isClient, hasRole, isDirector, isManagerOrDirector };
+module.exports = { isManager, isClient, hasRole, isDirector, isAdmin, isManagerOrDirector };

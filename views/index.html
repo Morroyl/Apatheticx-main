@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ЛегатоСклад – аренда складов</title>
     <link rel="stylesheet" href="/css/style.css">
-    <!-- Дополнительные стили для главной -->
     <style>
         .hero-section {
             position: relative;
@@ -147,6 +146,13 @@
             color: var(--text-secondary);
             font-size: 1.1rem;
         }
+        /* Популярные склады – сетка с минимальной высотой, чтобы кнопка не наезжала */
+        .popular-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            min-height: 200px; /* резервируем место */
+        }
         .testimonials-section {
             padding: 5rem 0;
             background: var(--bg-secondary);
@@ -258,6 +264,13 @@
                 font-size: 2.2rem;
             }
         }
+        /* Гарантированный отступ для кнопки "Смотреть все склады" */
+        .section-footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1rem;
+            clear: both;
+        }
     </style>
 </head>
 <body>
@@ -346,10 +359,10 @@
                     <h2>Популярные склады</h2>
                     <p>Выберите идеальное помещение для вашего бизнеса</p>
                 </div>
-                <div id="popular-warehouses" class="warehouses-grid">
-                    <p>Загрузка...</p>
+                <div id="popular-warehouses" class="popular-grid">
+                    <p style="grid-column: 1/-1; text-align: center;">Загрузка...</p>
                 </div>
-                <div style="text-align: center; margin-top: 3rem;">
+                <div class="section-footer">
                     <a href="/warehouses" class="btn">Смотреть все склады →</a>
                 </div>
             </div>
@@ -394,7 +407,7 @@
                         </div>
                     </div>
                 </div>
-                <div style="text-align: center; margin-top: 3rem;">
+                <div class="section-footer">
                     <a href="/reviews" class="btn btn-outline">Все отзывы</a>
                 </div>
             </div>
@@ -412,7 +425,7 @@
                         <h3>Контакты</h3>
                         <div class="contact-item">
                             <img src="/icons/map-marker-alt.svg" alt="Адрес">
-                            <span>г. Москва, Измайловский пр., 63А, Москва, 105043</span>
+                            <span>Измайловский просп., вл54, Москва, 105043</span>
                         </div>
                         <div class="contact-item">
                             <img src="/icons/phone.svg" alt="Телефон">
@@ -428,7 +441,7 @@
                         </div>
                     </div>
                     <div class="map">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d140.20577391608415!2d37.7877032865297!3d55.7881607398293!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sru!2sru!4v1777971932540!5m2!1sru!2sru" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <iframe src="https://yandex.ru/map-widget/v1/?um=constructor%3A760497d793c292512736a6122154bdf0d195b560f483c98169af9c4e6dea9985&amp;source=constructor" width="500" height="400" frameborder="0"></iframe>
                     </div>
                 </div>
             </div>
@@ -445,12 +458,19 @@
     <script src="/js/auth.js"></script>
     <script src="/js/theme.js"></script>
     <script>
-        // Загрузка популярных складов
+        function getImageSrc(imageUrl) {
+            if (!imageUrl) return null;
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+                return imageUrl;
+            }
+            return '/images/' + imageUrl;
+        }
+
         async function loadPopularWarehouses() {
             try {
                 const res = await fetch('/api/warehouses');
                 const warehouses = await res.json();
-                const popular = warehouses.slice(0, 3); // первые три
+                const popular = warehouses.slice(0, 3);
                 const container = document.getElementById('popular-warehouses');
                 if (!container) return;
                 if (popular.length === 0) {
@@ -459,8 +479,10 @@
                 }
                 let html = '';
                 popular.forEach(w => {
+                    const imgSrc = getImageSrc(w.imageUrl);
                     html += `
                         <div class="warehouse-card">
+                            ${imgSrc ? `<img src="${imgSrc}" alt="${w.name}" loading="lazy">` : ''}
                             <div class="category">${w.category || 'Общий'}</div>
                             <h3>${w.name}</h3>
                             <div class="address">
@@ -477,7 +499,8 @@
                 container.innerHTML = html;
             } catch (err) {
                 console.error('Ошибка загрузки популярных складов:', err);
-                document.getElementById('popular-warehouses').innerHTML = '<p>Ошибка загрузки</p>';
+                const container = document.getElementById('popular-warehouses');
+                if (container) container.innerHTML = '<p>Ошибка загрузки</p>';
             }
         }
         loadPopularWarehouses();

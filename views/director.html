@@ -3,9 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель директора | ЛегатоСклад</title>
+    <title>Панель управления | ЛегатоСклад</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            padding-bottom: 3rem;
+        }
+        #add-warehouse-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        #add-warehouse-form input,
+        #add-warehouse-form select,
+        #add-warehouse-form button {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-hint {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        footer {
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+        footer .container {
+            text-align: center;
+        }
+        /* Дополнительно: отступы в ячейке действий */
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -25,7 +68,7 @@
     </header>
 
     <main class="container" style="padding: 2rem 0;">
-        <h1 style="font-size: 2.5rem; margin-bottom: 2rem;">Панель директора</h1>
+        <h1 style="font-size: 2.5rem; margin-bottom: 2rem;">Панель управления</h1>
 
         <div class="tab-bar">
             <button class="tab" data-tab="warehouses">Склады</button>
@@ -35,17 +78,31 @@
             <button class="tab" data-tab="reviews">Отзывы</button>
         </div>
 
+        <!-- Вкладка Склады -->
         <div id="warehouses-tab" class="tab-pane">
             <div class="card">
                 <h3>Добавить новый склад</h3>
-                <form id="add-warehouse-form" class="inline-form">
+                <form id="add-warehouse-form">
                     <input type="text" id="warehouse-name" placeholder="Название" required>
                     <input type="text" id="warehouse-address" placeholder="Адрес" required>
                     <input type="number" id="warehouse-area" placeholder="Площадь (м²)" required step="0.01">
                     <input type="number" id="warehouse-price" placeholder="Цена за м²/мес" required step="0.01">
-                    <input type="text" id="warehouse-image" placeholder="URL изображения">
+
+                    <select id="warehouse-cat" required>
+                        <option value="">— Выберите категорию —</option>
+                        <option value="сухой">Сухой склад</option>
+                        <option value="холодильник">Холодильный склад</option>
+                        <option value="овощной">Овощехранилище</option>
+                        <option value="общий">Общего назначения</option>
+                    </select>
+
                     <input type="text" id="warehouse-desc" placeholder="Описание">
-                    <input type="text" id="warehouse-cat" placeholder="Категория">
+
+                    <div class="form-group">
+                        <input type="text" id="warehouse-image" placeholder="Имя файла (например, warehouse1.jpg)">
+                        <small class="form-hint">Файл должен находиться в папке public/images/</small>
+                    </div>
+
                     <button type="submit" class="btn">Добавить</button>
                 </form>
             </div>
@@ -55,9 +112,15 @@
             </div>
         </div>
 
+        <!-- Вкладка Пользователи -->
         <div id="users-tab" class="tab-pane">
             <div class="card">
                 <h3>Пользователи</h3>
+                <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+                    <input type="text" id="user-search" placeholder="Поиск по номеру телефона..." style="max-width: 300px;">
+                    <button id="search-btn" class="btn">Найти</button>
+                    <button id="clear-search-btn" class="btn btn-outline">Сброс</button>
+                </div>
                 <div id="users-list"><p>Загрузка...</p></div>
             </div>
         </div>
@@ -96,27 +159,27 @@
         </div>
     </main>
 
+    <footer>
+        <div class="container">
+            <p>© 2025 ЛегатоСклад. Все права защищены.</p>
+        </div>
+    </footer>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/theme.js"></script>
-    <style>
-        /* Вертикальные отступы для формы добавления склада */
-        #add-warehouse-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        #add-warehouse-form input,
-        #add-warehouse-form select,
-        #add-warehouse-form button {
-            width: 100%;
-            box-sizing: border-box;
-        }
-    </style>
-
     <script>
+        // Универсальная функция получения пути к картинке
+        function getImageSrc(imageUrl) {
+            if (!imageUrl) return null;
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+                return imageUrl;
+            }
+            return '/images/' + imageUrl;
+        }
+
         let currentUserId = null;
+        let currentUserRole = null;
         let currentRequestId = null;
         const socket = io();
 
@@ -128,10 +191,11 @@
             .then(res => res.json())
             .then(user => {
                 currentUserId = user.id;
+                currentUserRole = user.role;
             })
             .catch(err => console.error('Ошибка получения пользователя', err));
 
-        // Управление табами
+        // Табы
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -147,6 +211,21 @@
             });
         });
 
+        // Поиск пользователей
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const searchTerm = document.getElementById('user-search').value.trim();
+            loadUsers(searchTerm);
+        });
+        document.getElementById('clear-search-btn').addEventListener('click', () => {
+            document.getElementById('user-search').value = '';
+            loadUsers();
+        });
+        document.getElementById('user-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('search-btn').click();
+            }
+        });
+
         let allWarehouses = [];
 
         function renderWarehouses(warehouses) {
@@ -157,9 +236,11 @@
             }
             let html = '';
             warehouses.forEach(w => {
+                const imgSrc = getImageSrc(w.imageUrl);
                 html += `
                     <div class="warehouse-row">
                         <div>
+                            ${imgSrc ? `<img src="${imgSrc}" alt="${w.name}" style="width:100px; height:70px; object-fit:cover; border-radius:8px; margin-right:1rem;">` : ''}
                             <strong>${w.name}</strong> (${w.category || 'Без категории'})<br>
                             <small>${w.address}, площадь ${w.area} м², цена ${w.pricePerMonth} ₽/м²</small><br>
                             <small>${w.description || ''}</small>
@@ -204,6 +285,7 @@
             const newPrice = prompt('Цена за м²/мес:', warehouse.pricePerMonth);
             const newDesc = prompt('Описание:', warehouse.description || '');
             const newCat = prompt('Категория:', warehouse.category || '');
+            const newImage = prompt('Имя файла изображения (или URL):', warehouse.imageUrl || '');
             if (!newName || !newAddress || !newArea || !newPrice) return alert('Название, адрес, площадь и цена обязательны');
             fetch(`/director/warehouses/${id}`, {
                 method: 'PUT',
@@ -214,7 +296,8 @@
                     address: newAddress,
                     area: parseFloat(newArea),
                     pricePerMonth: parseFloat(newPrice),
-                    category: newCat
+                    category: newCat,
+                    imageUrl: newImage
                 })
             })
             .then(res => res.json())
@@ -240,13 +323,14 @@
             const address = document.getElementById('warehouse-address').value;
             const area = parseFloat(document.getElementById('warehouse-area').value);
             const price = parseFloat(document.getElementById('warehouse-price').value);
-            const desc = document.getElementById('warehouse-desc').value;
             const cat = document.getElementById('warehouse-cat').value;
+            const desc = document.getElementById('warehouse-desc').value;
+            const image = document.getElementById('warehouse-image').value.trim();
             if (!name || !address || !area || !price) return alert('Заполните обязательные поля');
             const res = await fetch('/director/warehouses', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description: desc, address, area, pricePerMonth: price, category: cat })
+                body: JSON.stringify({ name, description: desc, address, area, pricePerMonth: price, category: cat, imageUrl: image || null })
             });
             if (res.ok) {
                 document.getElementById('add-warehouse-form').reset();
@@ -257,10 +341,12 @@
         });
 
         // ===== ПОЛЬЗОВАТЕЛИ =====
-        async function loadUsers() {
+        async function loadUsers(search = '') {
             const container = document.getElementById('users-list');
+            container.innerHTML = '<p>Загрузка...</p>';
             try {
-                const res = await fetch('/director/users');
+                const url = '/director/users' + (search ? `?search=${encodeURIComponent(search)}` : '');
+                const res = await fetch(url);
                 const users = await res.json();
                 if (!users.length) {
                     container.innerHTML = '<p>Нет пользователей</p>';
@@ -271,6 +357,7 @@
                     let roleClass = '';
                     if (u.role === 'manager') roleClass = 'manager';
                     if (u.role === 'director') roleClass = 'director';
+                    if (u.role === 'admin') roleClass = 'admin';
                     html += `<tr>
                         <td>${u.id}</td>
                         <td>${u.fullName}</td>
@@ -278,11 +365,19 @@
                         <td>${u.phone || ''}</td>
                         <td><span class="role-badge ${roleClass}">${u.role}</span></td>
                         <td>
-                            ${u.role !== 'director' ? `
-                                <button class="btn change-role" data-id="${u.id}" data-role="${u.role === 'manager' ? 'client' : 'manager'}">
-                                    ${u.role === 'manager' ? 'Сделать клиентом' : 'Сделать менеджером'}
-                                </button>
-                            ` : ''}
+                            <div class="actions-cell">
+                                ${u.role !== 'director' && u.role !== 'admin' ? `
+                                    <button class="btn change-role" data-id="${u.id}" data-role="${u.role === 'manager' ? 'client' : 'manager'}">
+                                        ${u.role === 'manager' ? 'Сделать клиентом' : 'Сделать менеджером'}
+                                    </button>
+                                    ${(currentUserRole === 'director' || currentUserRole === 'admin') ? `
+                                        <button class="btn change-role" data-id="${u.id}" data-role="admin">Сделать администратором</button>
+                                    ` : ''}
+                                ` : ''}
+                                ${currentUserRole === 'admin' ? `
+                                    <button class="btn change-password-btn" data-id="${u.id}">Сменить пароль</button>
+                                ` : ''}
+                            </div>
                         </td>
                     </tr>`;
                 });
@@ -293,6 +388,9 @@
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const newRole = btn.dataset.role;
+                        if (newRole === 'admin' && !confirm('Вы уверены, что хотите назначить этого пользователя администратором? У него будут полные права.')) {
+                            return;
+                        }
                         fetch(`/director/users/${id}/role`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
@@ -301,12 +399,41 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data.error) alert(data.error);
-                            else loadUsers();
+                            else loadUsers(document.getElementById('user-search').value.trim());
                         });
                     });
                 });
+
+                document.querySelectorAll('.change-password-btn').forEach(btn => {
+                    btn.addEventListener('click', () => changeUserPassword(btn.dataset.id));
+                });
             } catch (err) {
                 container.innerHTML = '<p>Ошибка загрузки</p>';
+            }
+        }
+
+        async function changeUserPassword(userId) {
+            const newPassword = prompt('Введите новый пароль (минимум 6 символов):');
+            if (!newPassword) return;
+            if (newPassword.length < 6) {
+                alert('Пароль должен содержать минимум 6 символов');
+                return;
+            }
+            const confirm = prompt('Подтвердите новый пароль:');
+            if (newPassword !== confirm) {
+                alert('Пароли не совпадают');
+                return;
+            }
+            const res = await fetch(`/director/users/${userId}/password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newPassword })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Пароль успешно изменён');
+            } else {
+                alert(data.error || 'Ошибка смены пароля');
             }
         }
 
@@ -357,6 +484,16 @@
         }
 
         async function updateStatus(id, status) {
+            const statusText = {
+                'confirmed': 'Подтвердить',
+                'cancelled': 'Отменить',
+                'completed': 'Завершить'
+            };
+            const action = statusText[status] || status;
+            if (!confirm(`Вы уверены, что хотите ${action.toLowerCase()} заявку #${id}?`)) {
+                return;
+            }
+
             const res = await fetch(`/manager/leaserequests/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -369,9 +506,9 @@
                 if (document.getElementById('archive-tab').classList.contains('active')) {
                     loadArchiveRequests();
                 }
-                loadArchiveRequests();
             } else {
-                alert('Ошибка обновления статуса');
+                const data = await res.json();
+                alert(data.error || 'Ошибка обновления статуса');
             }
         }
 
@@ -526,7 +663,9 @@
             }
         }
 
+        // Первоначальная загрузка
         loadActiveRequests();
+        loadUsers();
     </script>
 </body>
 </html>

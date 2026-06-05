@@ -2,17 +2,16 @@ const { query, run } = require('../models/db');
 
 const Review = {
     async create(userId, warehouseId, rating, comment) {
-        const result = await db.query(
+        const result = await run(
             `INSERT INTO Reviews (userId, warehouseId, rating, comment, createdAt)
-             OUTPUT INSERTED.id
-             VALUES (@userId, @warehouseId, @rating, @comment, GETDATE())`,
-            { userId, warehouseId, rating, comment }
+             VALUES (?, ?, ?, ?, datetime('now'))`,
+            [userId, warehouseId, rating, comment]
         );
-        return result[0]?.id;
+        return result.id;
     },
 
     async findAll() {
-        return await db.query(
+        return await query(
             `SELECT r.*, u.fullName, w.name as warehouseName
              FROM Reviews r
              JOIN Users u ON r.userId = u.id
@@ -22,14 +21,14 @@ const Review = {
     },
 
     async findByUser(userId) {
-        return await db.query(
-            `SELECT * FROM Reviews WHERE userId = @userId ORDER BY createdAt DESC`,
-            { userId }
+        return await query(
+            `SELECT * FROM Reviews WHERE userId = ? ORDER BY createdAt DESC`,
+            [userId]
         );
     },
 
     async delete(id) {
-        await db.query('DELETE FROM Reviews WHERE id = @id', { id });
+        await run('DELETE FROM Reviews WHERE id = ?', [id]);
     }
 };
 

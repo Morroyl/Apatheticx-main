@@ -3,148 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Склады в аренду | ЛегатоСклад</title>
+    <title>Склады | ЛегатоСклад</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* Дополнительные стили для прижатия футера */
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
         body {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
         main {
-            flex: 1 0 auto;
+            flex: 1;
+            padding-bottom: 3rem;
         }
-        footer {
-            flex-shrink: 0;
-            margin-top: auto;
-        }
-        
-        /* Дополнительные стили для сетки карточек (на всякий случай) */
         .warehouses-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 2rem;                /* горизонтальный и вертикальный зазор */
+            padding: 2rem 0;
+            align-items: start;       /* чтобы карточки не растягивались по высоте ряда */
         }
         .warehouse-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 1.5rem;
+            border-radius: 24px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
-            height: 100%;
-            transition: transform 0.3s, box-shadow 0.3s;
+            height: fit-content;      /* не даём карточке растягиваться больше, чем нужно */
         }
         .warehouse-card:hover {
             transform: translateY(-8px);
-            border-color: var(--accent-primary);
-            box-shadow: 0 25px 30px -12px rgba(66,153,225,0.5);
+            box-shadow: 0 25px 30px -15px var(--accent-primary);
         }
-        .warehouse-card .category {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent-primary);
-            margin-bottom: 0.5rem;
+        .warehouse-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+        .warehouse-card .no-image {
+            background: var(--bg-secondary);
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+        }
+        .warehouse-card .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         .warehouse-card h3 {
+            margin: 0 0 0.5rem;
+        }
+        .warehouse-card h3 a {
+            text-decoration: none;
+            color: var(--text-primary);
             font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 0.75rem;
+            transition: color 0.2s;
+        }
+        .warehouse-card h3 a:hover {
+            color: var(--accent-primary);
         }
         .warehouse-card .address {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
         }
         .warehouse-card .address img {
             width: 18px;
             height: 18px;
-            filter: brightness(0) invert(1);
+            border: none;
         }
-        body.light-theme .warehouse-card .address img {
-            filter: brightness(0) invert(0);
-        }
-        .warehouse-card .description {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
+        .warehouse-card .details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
         .warehouse-card .price {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-        .warehouse-card .price small {
-            font-size: 0.9rem;
-            font-weight: 400;
+            font-size: 1.25rem;
+            font-weight: 700;
             color: var(--accent-primary);
         }
+        .warehouse-card .price small {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
         .warehouse-card .area {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
+            font-weight: 600;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .warehouse-card .btn-details {
-            align-self: flex-start;
-            background: transparent;
-            border: 1px solid var(--accent-primary);
-            border-radius: 40px;
-            padding: 0.5rem 1.5rem;
-            color: var(--text-primary);
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s;
-            margin-top: auto;
-            cursor: pointer;
+        .warehouse-card .category {
             display: inline-block;
-            text-align: center;
-        }
-        .warehouse-card .btn-details:hover {
             background: var(--accent-primary);
             color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            align-self: flex-start;
         }
-        .filter-bar {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 60px;
-            border: 1px solid var(--border-color);
-            flex-wrap: wrap;
+        .warehouse-card .btn-details {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            align-self: flex-start;
+            margin-top: auto;
         }
-        .filter-bar input, .filter-bar select {
-            flex: 1;
-            min-width: 200px;
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 40px;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-primary);
+        .warehouse-card .btn-details:hover {
+            opacity: 0.9;
         }
-        @media (max-width: 768px) {
-            .filter-bar {
-                flex-direction: column;
-            }
-            .warehouses-grid {
-                grid-template-columns: 1fr;
-            }
+        footer {
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            margin-top: auto;
+            background: var(--bg-footer, var(--bg-secondary));
+        }
+        footer .container {
+            text-align: center;
         }
     </style>
 </head>
@@ -167,26 +159,14 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 0;">
-        <h1 style="font-size: 3rem; margin-bottom: 1rem;">Склады в аренду</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Подберите помещение под ваш бизнес</p>
+    <main>
+        <div class="container">
+            <h1 style="font-size: 2.5rem; margin: 2rem 0 1rem;">Доступные склады</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Выберите подходящее помещение для вашего бизнеса</p>
 
-        <div class="filter-bar">
-            <input type="text" id="search-input" placeholder="Поиск по названию или адресу...">
-            <select id="category-filter">
-                <option value="all">Все категории</option>
-            </select>
-            <select id="area-filter">
-                <option value="all">Любая площадь</option>
-                <option value="0-200">до 200 м²</option>
-                <option value="200-500">200-500 м²</option>
-                <option value="500-1000">500-1000 м²</option>
-                <option value="1000+">более 1000 м²</option>
-            </select>
-        </div>
-
-        <div id="warehouses-container" class="warehouses-grid">
-            <p>Загрузка...</p>
+            <div id="warehouses-container" class="warehouses-grid">
+                <p style="grid-column: 1/-1; text-align: center;">Загрузка складов...</p>
+            </div>
         </div>
     </main>
 
@@ -199,80 +179,54 @@
     <script src="/js/auth.js"></script>
     <script src="/js/theme.js"></script>
     <script>
-        let allWarehouses = [];
-
-        function renderWarehouses(warehouses) {
-            const container = document.getElementById('warehouses-container');
-            if (!warehouses.length) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Нет складов, соответствующих критериям.</p>';
-                return;
+        function getImageSrc(imageUrl) {
+            if (!imageUrl) return null;
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+                return imageUrl;
             }
-            let html = '';
-            warehouses.forEach(w => {
-                html += `
-                    <div class="warehouse-card">
-                        <div class="category">${w.category || 'Общий'}</div>
-                        <h3>${w.name}</h3>
-                        <div class="address">
-                            <img src="/icons/map-marker-alt.svg" alt="">
-                            ${w.address}
-                        </div>
-                        <div class="description">${w.description || ''}</div>
-                        <div class="price">${w.pricePerMonth} <small>₽/м² в месяц</small></div>
-                        <div class="area">Площадь: ${w.area} м²</div>
-                        <a href="/dashboard?warehouseId=${w.id}" class="btn-details">Оставить заявку</a>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            return '/images/' + imageUrl;
         }
 
-        function filterWarehouses() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const category = document.getElementById('category-filter').value;
-            const areaRange = document.getElementById('area-filter').value;
-
-            const filtered = allWarehouses.filter(w => {
-                const matchesSearch = w.name.toLowerCase().includes(searchTerm) || w.address.toLowerCase().includes(searchTerm);
-                const matchesCategory = category === 'all' || w.category === category;
-                let matchesArea = true;
-                if (areaRange !== 'all') {
-                    if (areaRange === '0-200') matchesArea = w.area <= 200;
-                    else if (areaRange === '200-500') matchesArea = w.area > 200 && w.area <= 500;
-                    else if (areaRange === '500-1000') matchesArea = w.area > 500 && w.area <= 1000;
-                    else if (areaRange === '1000+') matchesArea = w.area > 1000;
+        async function loadWarehouses() {
+            const container = document.getElementById('warehouses-container');
+            try {
+                const res = await fetch('/api/warehouses');
+                const warehouses = await res.json();
+                if (!warehouses.length) {
+                    container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Нет доступных складов</p>';
+                    return;
                 }
-                return matchesSearch && matchesCategory && matchesArea;
-            });
-            renderWarehouses(filtered);
+                let html = '';
+                warehouses.forEach(w => {
+                    const imgSrc = getImageSrc(w.imageUrl);
+                    html += `
+                        <div class="warehouse-card">
+                            ${imgSrc ? 
+                                `<img src="${imgSrc}" alt="${w.name}" loading="lazy">` : 
+                                `<div class="no-image">🏢</div>`
+                            }
+                            <div class="card-body">
+                                <span class="category">${w.category || 'Общий'}</span>
+                                <h3><a href="/warehouse/${w.id}">${w.name}</a></h3>
+                                <div class="address">
+                                    <img src="/icons/map-marker-alt.svg" alt="">
+                                    ${w.address}
+                                </div>
+                                <div class="details">
+                                    <div class="price">${w.pricePerMonth} <small>₽/м²/мес</small></div>
+                                    <div class="area">${w.area} м²</div>
+                                </div>
+                                <a href="/dashboard?warehouseId=${w.id}" class="btn-details">Оставить заявку</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = '<p style="grid-column:1/-1; text-align:center; color: #fca5a5;">Ошибка загрузки данных</p>';
+            }
         }
-
-        function populateCategories(warehouses) {
-            const categories = [...new Set(warehouses.map(w => w.category).filter(Boolean))];
-            const select = document.getElementById('category-filter');
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                select.appendChild(option);
-            });
-        }
-
-        fetch('/api/warehouses')
-            .then(res => res.json())
-            .then(warehouses => {
-                allWarehouses = warehouses;
-                renderWarehouses(warehouses);
-                populateCategories(warehouses);
-            })
-            .catch(err => {
-                document.getElementById('warehouses-container').innerHTML = '<p style="color: #fca5a5;">Ошибка загрузки данных.</p>';
-                console.error(err);
-            });
-
-        document.getElementById('search-input').addEventListener('input', filterWarehouses);
-        document.getElementById('category-filter').addEventListener('change', filterWarehouses);
-        document.getElementById('area-filter').addEventListener('change', filterWarehouses);
+        loadWarehouses();
     </script>
 </body>
 </html>

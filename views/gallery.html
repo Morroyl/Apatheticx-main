@@ -35,7 +35,7 @@
             <p>Загрузка...</p>
         </div>
 
-        <!-- Лайтбокс для увеличения фото -->
+        <!-- Лайтбокс -->
         <div id="lightbox" class="lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
             <span style="position: absolute; top: 20px; right: 30px; color: white; font-size: 2.5rem; cursor: pointer;">&times;</span>
             <img id="lightbox-img" src="" alt="" style="max-width: 90%; max-height: 80%; border-radius: 8px;">
@@ -51,6 +51,14 @@
     <script src="/js/auth.js"></script>
     <script src="/js/theme.js"></script>
     <script>
+        function getImageSrc(imageUrl) {
+            if (!imageUrl) return null;
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+                return imageUrl;
+            }
+            return '/images/' + imageUrl;
+        }
+
         async function loadGallery() {
             const container = document.getElementById('gallery-container');
             try {
@@ -63,9 +71,10 @@
                 }
                 let html = '';
                 withImages.forEach(w => {
+                    const imgSrc = getImageSrc(w.imageUrl);
                     html += `
                         <div class="gallery-card">
-                            <img src="${w.imageUrl}" alt="${w.name}" loading="lazy">
+                            <img src="${imgSrc}" alt="${w.name}" loading="lazy">
                             <div class="gallery-card-content">
                                 <h3>${w.name}</h3>
                                 <div class="address">
@@ -79,7 +88,6 @@
                 });
                 container.innerHTML = html;
 
-                // Добавляем обработчик для открытия лайтбокса
                 document.querySelectorAll('.gallery-card img').forEach(img => {
                     img.addEventListener('click', function() {
                         document.getElementById('lightbox-img').src = this.src;
@@ -92,7 +100,6 @@
             }
         }
 
-        // Закрытие лайтбокса
         document.getElementById('lightbox').addEventListener('click', function(e) {
             if (e.target === this || e.target.tagName === 'SPAN') {
                 this.style.display = 'none';

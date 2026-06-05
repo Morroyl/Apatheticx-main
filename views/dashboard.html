@@ -5,6 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет | ЛегатоСклад</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        button, .btn {
+            cursor: pointer;
+            user-select: none;
+        }
+        /* Стили для вкладок (аналогично director.html) */
+        .tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0;
+        }
+        .tab {
+            background: none;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .tab:hover {
+            color: var(--text-primary);
+        }
+        .tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        /* Отступ для блока смены пароля */
+        .password-section {
+            margin-top: 2rem;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -27,39 +70,88 @@
         <h2 style="margin-bottom: 1rem;">Личный кабинет арендатора</h2>
         <p style="margin-bottom: 2rem;">Добро пожаловать, <span id="user-name" style="color: var(--accent-primary); font-weight: 600;"></span>!</p>
 
-        <div class="card">
-            <h3>Новая заявка на аренду</h3>
-            <form id="lease-request-form">
-                <div class="form-group">
-                    <label for="warehouse">Выберите склад</label>
-                    <select id="warehouse" required>
-                        <option value="">— Выберите склад —</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="startDate">Дата начала аренды</label>
-                    <input type="date" id="startDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="endDate">Дата окончания аренды</label>
-                    <input type="date" id="endDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="comment">Комментарий (необязательно)</label>
-                    <textarea id="comment" rows="3" placeholder="Дополнительные пожелания..."></textarea>
-                </div>
-                <button type="submit" class="btn">Отправить заявку</button>
-            </form>
+        <!-- Вкладки -->
+        <div class="tab-bar">
+            <button class="tab active" data-tab="profile">Мой профиль</button>
+            <button class="tab" data-tab="new-request">Новая заявка</button>
+            <button class="tab" data-tab="my-requests">Мои заявки</button>
         </div>
 
-        <div class="card">
-            <h3>Мои заявки</h3>
-            <div id="requests-list">
-                <p style="color: var(--text-secondary);">Загрузка...</p>
+        <!-- Вкладка Профиль -->
+        <div id="profile-tab" class="tab-pane active">
+            <div class="card">
+                <h3>Мой профиль</h3>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-fullName">ФИО</label>
+                        <input type="text" id="profile-fullName" required placeholder="Иван Иванов">
+                        <div id="profile-error" style="color: #fca5a5; margin-top: 0.25rem;"></div>
+                    </div>
+                    <button type="submit" class="btn">Сохранить изменения</button>
+                </form>
+
+                <div class="password-section">
+                    <h4>Сменить пароль</h4>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label for="old-password">Текущий пароль</label>
+                            <input type="password" id="old-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">Новый пароль (мин. 6 символов)</label>
+                            <input type="password" id="new-password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Подтвердите новый пароль</label>
+                            <input type="password" id="confirm-password" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn">Сменить пароль</button>
+                        <div id="password-error" style="color: #fca5a5; margin-top: 0.5rem;"></div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div id="chat-container" class="card" style="display: none;">
+        <!-- Вкладка Новая заявка -->
+        <div id="new-request-tab" class="tab-pane">
+            <div class="card">
+                <h3>Новая заявка на аренду</h3>
+                <form id="lease-request-form">
+                    <div class="form-group">
+                        <label for="warehouse">Выберите склад</label>
+                        <select id="warehouse" required>
+                            <option value="">— Выберите склад —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">Дата начала аренды</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Дата окончания аренды</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Комментарий (необязательно)</label>
+                        <textarea id="comment" rows="3" placeholder="Дополнительные пожелания..."></textarea>
+                    </div>
+                    <button type="submit" class="btn">Отправить заявку</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Вкладка Мои заявки -->
+        <div id="my-requests-tab" class="tab-pane">
+            <div class="card">
+                <h3>Мои заявки</h3>
+                <div id="requests-list">
+                    <p style="color: var(--text-secondary);">Загрузка...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Чат (вне вкладок, будет показываться при открытии) -->
+        <div id="chat-container" class="card" style="display: none; margin-top: 2rem;">
             <h3>Чат по заявке #<span id="chat-request-id"></span></h3>
             <div id="chat-messages" class="chat-messages"></div>
             <div style="display: flex; gap: 0.5rem;">
@@ -81,6 +173,23 @@
             console.log('✅ Подтверждено присоединение к комнате заявки', data.leaseRequestId);
         });
 
+        // Управление вкладками
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const tabId = tab.dataset.tab;
+                document.getElementById(tabId + '-tab').classList.add('active');
+                // При открытии "Моих заявок" загружаем их
+                if (tabId === 'my-requests') loadRequests();
+                // При открытии "Новой заявки" можно ничего не делать, но если нужно обновить список складов
+                if (tabId === 'new-request') {
+                    // Список складов уже загружен, но на случай обновления можно перезагрузить
+                }
+            });
+        });
+
         async function loadUser() {
             try {
                 const res = await fetch('/auth/me');
@@ -88,20 +197,25 @@
                 const user = await res.json();
                 currentUserId = user.id;
                 document.getElementById('user-name').textContent = user.fullName;
+                document.getElementById('profile-fullName').value = user.fullName || '';
                 return user;
             } catch (err) {
                 window.location.href = '/login';
             }
         }
 
-        async function loadWarehouses() {
+        async function loadWarehouses(preselectedId = null) {
             const res = await fetch('/lease-requests/warehouses');
             const warehouses = await res.json();
             const select = document.getElementById('warehouse');
+            select.innerHTML = '<option value="">— Выберите склад —</option>';
             warehouses.forEach(w => {
                 const option = document.createElement('option');
                 option.value = w.id;
                 option.textContent = `${w.name} (${w.address}) – ${w.pricePerMonth} ₽/м²`;
+                if (preselectedId && w.id == preselectedId) {
+                    option.selected = true;
+                }
                 select.appendChild(option);
             });
         }
@@ -146,11 +260,14 @@
 
         function openChat(requestId) {
             currentRequestId = requestId;
-            document.getElementById('chat-container').style.display = 'block';
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.style.display = 'block';
             document.getElementById('chat-request-id').textContent = requestId;
             document.getElementById('chat-messages').innerHTML = '';
             socket.emit('join-appointment', requestId);
             loadMessages(requestId);
+            // Прокрутим страницу к чату
+            chatContainer.scrollIntoView({ behavior: 'smooth' });
         }
 
         async function loadMessages(requestId) {
@@ -201,6 +318,7 @@
             scrollChatToBottom();
         });
 
+        // Отправка заявки
         document.getElementById('lease-request-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const warehouseId = document.getElementById('warehouse').value;
@@ -216,17 +334,89 @@
             if (res.ok) {
                 alert('Заявка отправлена!');
                 document.getElementById('lease-request-form').reset();
-                loadRequests();
+                // Переключимся на вкладку "Мои заявки" и обновим её
+                document.querySelector('.tab[data-tab="my-requests"]').click();
             } else {
                 const data = await res.json();
                 alert(data.error || 'Ошибка при отправке заявки');
             }
         });
 
+        // Обновление профиля с проверкой ФИО
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('profile-fullName').value.trim();
+            const errorDiv = document.getElementById('profile-error');
+            errorDiv.textContent = '';
+
+            const nameRegex = /^[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s+[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?(?:\s+[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?)?$/;
+            if (!nameRegex.test(fullName)) {
+                errorDiv.textContent = 'Введите полное имя (Фамилия Имя Отчество) с заглавных букв, например: Иванов Иван Иванович';
+                return;
+            }
+
+            const res = await fetch('/auth/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Профиль обновлён');
+                document.getElementById('user-name').textContent = fullName;
+            } else {
+                errorDiv.textContent = data.error || 'Ошибка обновления профиля';
+            }
+        });
+
+        // Смена пароля с проверками
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('old-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorDiv = document.getElementById('password-error');
+            errorDiv.textContent = '';
+
+            if (newPassword !== confirmPassword) {
+                errorDiv.textContent = 'Пароли не совпадают';
+                return;
+            }
+            if (oldPassword === newPassword) {
+                errorDiv.textContent = 'Новый пароль должен отличаться от текущего';
+                return;
+            }
+            if (newPassword.length < 6) {
+                errorDiv.textContent = 'Минимальная длина пароля — 6 символов';
+                return;
+            }
+
+            const res = await fetch('/auth/password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Пароль изменён');
+                document.getElementById('password-form').reset();
+            } else {
+                errorDiv.textContent = data.error || 'Ошибка смены пароля';
+            }
+        });
+
+        // Инициализация
         (async () => {
             await loadUser();
-            await loadWarehouses();
-            await loadRequests();
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectedWarehouseId = urlParams.get('warehouseId');
+            await loadWarehouses(preselectedWarehouseId);
+            // Если передан warehouseId, сразу переключаемся на вкладку "Новая заявка"
+            if (preselectedWarehouseId) {
+                document.querySelector('.tab[data-tab="new-request"]').click();
+            }
+            // Предварительно загрузим заявки, чтобы при переключении они уже были
+            loadRequests();
         })();
     </script>
 </body>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Склад | ЛегатоСклад</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .warehouse-detail {
+            max-width: 900px;
+            margin: 2rem auto;
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .warehouse-detail img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+        .warehouse-detail .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .warehouse-detail .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .warehouse-detail .value {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo">ЛегатоСклад</div>
+            <nav class="nav-menu">
+                <a href="/">Главная</a>
+                <a href="/warehouses">Склады</a>
+                <a href="/reviews">Отзывы</a>
+                <a href="/about">О нас</a>
+                <a href="/gallery">Галерея</a>
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <img src="/icons/moon.svg" alt="Переключить тему">
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="warehouse-detail" id="detail-container">
+            <p>Загрузка...</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 ЛегатоСклад. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        function getImageSrc(imageUrl) {
+            if (!imageUrl) return null;
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+                return imageUrl;
+            }
+            return '/images/' + imageUrl;
+        }
+
+        async function loadWarehouse() {
+            const pathParts = window.location.pathname.split('/');
+            const id = pathParts[pathParts.length - 1];
+            if (!id) {
+                document.getElementById('detail-container').innerHTML = '<p>Склад не указан</p>';
+                return;
+            }
+            try {
+                const res = await fetch(`/api/warehouses/${id}`);
+                if (!res.ok) throw new Error('Склад не найден');
+                const w = await res.json();
+                document.getElementById('page-title').textContent = w.name + ' | ЛегатоСклад';
+                const container = document.getElementById('detail-container');
+                const imgSrc = getImageSrc(w.imageUrl);
+                container.innerHTML = `
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${w.name}">` : ''}
+                    <h1>${w.name}</h1>
+                    <p><strong>Категория:</strong> ${w.category || 'Не указана'}</p>
+                    <p><strong>Адрес:</strong> ${w.address}</p>
+                    <p><strong>Описание:</strong> ${w.description || 'Нет описания'}</p>
+                    <div class="info-grid">
+                        <div><div class="label">Площадь</div><div class="value">${w.area} м²</div></div>
+                        <div><div class="label">Цена</div><div class="value">${w.pricePerMonth} ₽/м²/мес</div></div>
+                    </div>
+                    <a href="/dashboard?warehouseId=${w.id}" class="btn">Оставить заявку</a>
+                `;
+            } catch (err) {
+                document.getElementById('detail-container').innerHTML = '<p>Ошибка загрузки данных склада</p>';
+            }
+        }
+        loadWarehouse();
+    </script>
+</body>
+</html>
