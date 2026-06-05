@@ -38,6 +38,7 @@
                         <label for="password">Пароль</label>
                         <input type="password" id="password" required>
                     </div>
+                    <div id="login-error" style="color: #fca5a5; margin-bottom: 1rem;"></div>
                     <button type="submit" class="btn">Войти</button>
                 </form>
                 <p style="margin-top: 1rem;">Нет аккаунта? <a href="/register" style="color: var(--accent-primary);">Зарегистрироваться</a></p>
@@ -52,6 +53,9 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = ''; // очищаем предыдущую ошибку
+
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -62,10 +66,10 @@
                 if (res.ok) {
                     window.location.href = data.redirectUrl || '/dashboard';
                 } else {
-                    alert(data.error || 'Ошибка входа');
+                    errorDiv.textContent = data.error || 'Ошибка входа';
                 }
             } catch (err) {
-                alert('Ошибка сети');
+                errorDiv.textContent = 'Ошибка соединения';
             }
         });
     </script>
