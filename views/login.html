@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход | ЛегатоСклад</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+        .password-wrapper input {
+            width: 100%;
+            box-sizing: border-box;
+            padding-right: 40px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .toggle-password img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) invert(1);
+        }
+        body.light-theme .toggle-password img {
+            filter: brightness(0) invert(0);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -36,7 +65,12 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Пароль</label>
-                        <input type="password" id="password" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" required>
+                            <button type="button" class="toggle-password" id="toggle-password-btn">
+                                <img src="/icons/eye.svg" alt="Показать пароль" id="toggle-icon">
+                            </button>
+                        </div>
                     </div>
                     <div id="login-error" style="color: #fca5a5; margin-bottom: 1rem;"></div>
                     <button type="submit" class="btn">Войти</button>
@@ -49,12 +83,28 @@
     <script src="/js/auth.js"></script>
     <script src="/js/theme.js"></script>
     <script>
+        const toggleBtn = document.getElementById('toggle-password-btn');
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggle-icon');
+
+        toggleBtn.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.src = '/icons/eye-slash.svg';
+                toggleIcon.alt = 'Скрыть пароль';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.src = '/icons/eye.svg';
+                toggleIcon.alt = 'Показать пароль';
+            }
+        });
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const password = passwordInput.value;
             const errorDiv = document.getElementById('login-error');
-            errorDiv.textContent = ''; // очищаем предыдущую ошибку
+            errorDiv.textContent = '';
 
             try {
                 const res = await fetch('/auth/login', {

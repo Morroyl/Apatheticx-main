@@ -33,15 +33,6 @@ function initDatabase() {
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS ArchivedMessages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    originalId INTEGER NOT NULL,
-    leaseRequestId INTEGER NOT NULL,
-    senderId INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    sentAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
     db.run(`CREATE TABLE IF NOT EXISTS Warehouses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,

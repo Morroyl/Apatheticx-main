@@ -21,7 +21,7 @@ function hasRole(allowedRoles) {
     };
 }
 
-// Обновлённая проверка: директор или администратор
+// директор или администратор
 function isDirector(req, res, next) {
     if (req.session.user && (req.session.user.role === 'director' || req.session.user.role === 'admin')) {
         return next();
